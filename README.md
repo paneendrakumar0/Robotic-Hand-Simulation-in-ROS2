@@ -32,8 +32,8 @@ It is designed to act as a **Digital Twin**, allowing you to visualize and contr
 
 ### 1. Create a Workspace (if you haven't already)
 ```bash
-mkdir -p ~/modified_ws/src
-cd ~/modified_ws/src
+mkdir -p ~/Hand_Sim/src
+cd ~/Hand_Sim/src
 
 ```
 
@@ -47,7 +47,7 @@ git clone [https://github.com/paneendrakumar0/robotic-hand-ros2.git]
 ### 3. Install Dependencies
 
 ```bash
-cd ~/modified_ws
+cd ~/Hand_Sim
 rosdep install --from-paths src --ignore-src -r -y
 
 ```
@@ -55,7 +55,7 @@ rosdep install --from-paths src --ignore-src -r -y
 ### 4. Build the Package
 
 ```bash
-cd ~/modified_ws
+cd ~/Hand_Sim
 colcon build --symlink-install
 source install/setup.bash
 
