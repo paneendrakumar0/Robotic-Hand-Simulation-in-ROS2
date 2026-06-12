@@ -1,0 +1,13 @@
+build/
+install/
+log/
+hand_ws/
+__pycache__/
+*.pyc
+.pytest_cache/
+.vscode/
+*.swp
+*.mp4
+*.gif
+!hand_motion.gif
+*.png

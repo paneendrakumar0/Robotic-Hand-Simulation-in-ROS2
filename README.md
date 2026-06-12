@@ -11,6 +11,10 @@ A ROS-based simulation of a robotic hand featuring full finger articulation and 
 ![Build](https://img.shields.io/badge/build-colcon-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+### 🎥 Simulation Motion Preview
+
+![DexHand V2 Demo Mode Motion](hand_motion.gif)
+
 ## 📖 Overview
 This package contains a high-fidelity **ROS 2 simulation of the DexHand V2 robotic hand**, featuring full finger articulation and **wrist rotation**. 
 
@@ -66,46 +70,42 @@ source install/setup.bash
 
 ---
 
-## 🚀 Usage
+## 🚀 Usage & Modes
 
-To launch the simulation with the advanced controller and RViz visualization:
+This package supports multiple execution modes:
 
+### 1. High-Fidelity Demo Mode (No Camera Required)
+Plays an automated, continuous range-of-motion demonstration loop (fist clenching, waving, sequential finger counting, and thumbs-up) with wrist translations/rotations. Perfect for system verification and presentations.
 ```bash
-ros2 launch dexhand_control advanced_control.launch.py
+ros2 launch dexhand_control advanced_control.launch.py mode:=demo
+```
 
+### 2. Camera Hand Tracking Mode (MediaPipe)
+Uses your webcam to track your hand gestures and wrist roll dynamically, mirroring them onto the digital twin in real time.
+```bash
+ros2 launch dexhand_control advanced_control.launch.py mode:=camera
 ```
 
 ---
 
-## 🎮 How to Use (Digital Twin Mode)
+## 🎮 Out-of-the-Box RViz2 Visualization
 
-### 1. Controlling Joints
+This package includes a **pre-configured RViz2 layout** (`config/dexhand.rviz`). When you run the launch file:
+* The Fixed Frame is automatically set to `world` (to visualize free-space movements relative to the grid).
+* The `RobotModel` and `TF` displays are pre-loaded and configured.
+* A high-contrast dark background theme is loaded for a premium visualization aesthetic.
 
-A GUI window (**Joint State Publisher**) will appear.
-
-* Use the sliders to curl fingers individually.
-* Use the **Wrist/Roll** sliders to rotate the hand.
-
-### 2. Setting up the "World" Frame in RViz2
-
-To visualize the hand rotating freely in space (like a real hand moving in the air relative to the ground):
-
-1. In RViz2, go to the **Displays** panel (left side).
-2. Find **Global Options** > **Fixed Frame**.
-3. Change it from `base_link` to **`world`**.
-* *If `world` is not listed, type it manually.*
-
-
-4. Now, when you move the "Wrist" or "Arm" sliders, the entire hand will rotate relative to the grid.
+No manual display setup or frame configuration is required!
 
 ---
 
 ## 📂 File Structure
 
-* `dexhand_control/` - Main Python logic for hand tracking and control.
-* `launch/` - Python launch files (`advanced_control.launch.py`).
-* `dexhandv2_description/` - URDF and meshes (from IoT Design Shop repo).
-* `config/` - RViz2 configuration files.
+* `dexhand_control/` - Python controller logic (featuring OneEuro filter smoothing and dynamic demo/camera modes).
+* `launch/` - ROS 2 launch files (`advanced_control.launch.py`).
+* `config/` - Pre-configured RViz2 configuration (`dexhand.rviz`).
+* `resource/` - ROS 2 package resources.
+* `setup.py` - Installation and entry point configurations.
 
 ---
 
