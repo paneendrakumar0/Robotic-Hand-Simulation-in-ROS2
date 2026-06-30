@@ -70,6 +70,7 @@
     <limit lower="-0.78" upper="0.78" effort="10" velocity="3"/>
   </joint>
 
+  <!-- Head Base -->
   <link name="head">
     <visual>
       <origin xyz="0 0 0.1" rpy="0 0 0"/>
@@ -82,22 +83,206 @@
     </visual>
   </link>
 
-  <!-- Jaw -->
+  <!-- Nose -->
+  <joint name="nose_fixed" type="fixed">
+    <parent link="head"/>
+    <child link="nose"/>
+    <origin xyz="0.09 0 0.1" rpy="0 1.5708 0"/>
+  </joint>
+  <link name="nose">
+    <visual>
+      <geometry>
+        <cylinder radius="0.015" length="0.03"/>
+      </geometry>
+      <material name="skin"/>
+    </visual>
+  </link>
+
+  <!-- Left Eye -->
+  <joint name="l_eye_yaw" type="revolute">
+    <parent link="head"/>
+    <child link="l_eye_yaw_link"/>
+    <origin xyz="0.08 0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.5" upper="0.5" effort="5" velocity="5"/>
+  </joint>
+  <link name="l_eye_yaw_link"/>
+  
+  <joint name="l_eye_pitch" type="revolute">
+    <parent link="l_eye_yaw_link"/>
+    <child link="l_eye"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.5" effort="5" velocity="5"/>
+  </joint>
+  <link name="l_eye">
+    <visual>
+      <geometry>
+        <sphere radius="0.018"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <!-- Pupil -->
+    <visual>
+      <origin xyz="0.015 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.006"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Left Eyelids (Blinking) -->
+  <joint name="l_upper_lid_pitch" type="revolute">
+    <parent link="head"/>
+    <child link="l_upper_lid"/>
+    <origin xyz="0.08 0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.6" upper="0.0" effort="5" velocity="10"/>
+  </joint>
+  <link name="l_upper_lid">
+    <visual>
+      <origin xyz="0.019 0 0.01" rpy="0 -0.5 0"/>
+      <geometry>
+        <box size="0.005 0.04 0.02"/>
+      </geometry>
+      <material name="skin"/>
+    </visual>
+  </link>
+  <joint name="l_lower_lid_pitch" type="revolute">
+    <parent link="head"/>
+    <child link="l_lower_lid"/>
+    <origin xyz="0.08 0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="0.6" effort="5" velocity="10"/>
+  </joint>
+  <link name="l_lower_lid">
+    <visual>
+      <origin xyz="0.019 0 -0.01" rpy="0 0.5 0"/>
+      <geometry>
+        <box size="0.005 0.04 0.02"/>
+      </geometry>
+      <material name="skin"/>
+    </visual>
+  </link>
+
+  <!-- Right Eye -->
+  <joint name="r_eye_yaw" type="revolute">
+    <parent link="head"/>
+    <child link="r_eye_yaw_link"/>
+    <origin xyz="0.08 -0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.5" upper="0.5" effort="5" velocity="5"/>
+  </joint>
+  <link name="r_eye_yaw_link"/>
+  
+  <joint name="r_eye_pitch" type="revolute">
+    <parent link="r_eye_yaw_link"/>
+    <child link="r_eye"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.5" effort="5" velocity="5"/>
+  </joint>
+  <link name="r_eye">
+    <visual>
+      <geometry>
+        <sphere radius="0.018"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <!-- Pupil -->
+    <visual>
+      <origin xyz="0.015 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.006"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+  <!-- Right Eyelids (Blinking) -->
+  <joint name="r_upper_lid_pitch" type="revolute">
+    <parent link="head"/>
+    <child link="r_upper_lid"/>
+    <origin xyz="0.08 -0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.6" upper="0.0" effort="5" velocity="10"/>
+  </joint>
+  <link name="r_upper_lid">
+    <visual>
+      <origin xyz="0.019 0 0.01" rpy="0 -0.5 0"/>
+      <geometry>
+        <box size="0.005 0.04 0.02"/>
+      </geometry>
+      <material name="skin"/>
+    </visual>
+  </link>
+  <joint name="r_lower_lid_pitch" type="revolute">
+    <parent link="head"/>
+    <child link="r_lower_lid"/>
+    <origin xyz="0.08 -0.04 0.13" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="0.6" effort="5" velocity="10"/>
+  </joint>
+  <link name="r_lower_lid">
+    <visual>
+      <origin xyz="0.019 0 -0.01" rpy="0 0.5 0"/>
+      <geometry>
+        <box size="0.005 0.04 0.02"/>
+      </geometry>
+      <material name="skin"/>
+    </visual>
+  </link>
+
+  <!-- Upper Lip -->
+  <joint name="upper_lip_pitch" type="revolute">
+    <parent link="head"/>
+    <child link="upper_lip"/>
+    <origin xyz="0.09 0 0.07" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="0.2" effort="5" velocity="5"/>
+  </joint>
+  <link name="upper_lip">
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.06 0.015"/>
+      </geometry>
+      <material name="red">
+        <color rgba="0.8 0.3 0.3 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Jaw and Lower Lip -->
   <joint name="jaw_pitch" type="revolute">
     <parent link="head"/>
     <child link="jaw"/>
-    <origin xyz="0 0.05 0.05" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="-0.5" upper="0.0" effort="10" velocity="3"/>
+    <origin xyz="0.02 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.0" effort="10" velocity="5"/>
   </joint>
 
   <link name="jaw">
     <visual>
-      <origin xyz="0 0.05 -0.05" rpy="0 0 0"/>
+      <!-- Chin -->
+      <origin xyz="0.06 0 -0.03" rpy="0 0 0"/>
       <geometry>
-        <box size="0.08 0.08 0.02"/>
+        <box size="0.05 0.07 0.03"/>
       </geometry>
       <material name="skin"/>
+    </visual>
+    <visual>
+      <!-- Lower Lip -->
+      <origin xyz="0.07 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.06 0.015"/>
+      </geometry>
+      <material name="red"/>
     </visual>
   </link>
 

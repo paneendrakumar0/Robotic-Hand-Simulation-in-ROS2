@@ -109,7 +109,16 @@ class AdvancedHandTracker(Node):
             "l_shoulder_yaw",
             "l_shoulder_pitch",
             "l_elbow_pitch",
-            "l_wrist_roll"
+            "l_wrist_roll",
+            "l_eye_yaw",
+            "l_eye_pitch",
+            "l_upper_lid_pitch",
+            "l_lower_lid_pitch",
+            "r_eye_yaw",
+            "r_eye_pitch",
+            "r_upper_lid_pitch",
+            "r_lower_lid_pitch",
+            "upper_lip_pitch"
         ]
 
         min_cutoff = 0.01  # Drastically lowered to fix jitter
@@ -117,7 +126,7 @@ class AdvancedHandTracker(Node):
 
         self.filters = []
         t0 = time.time()
-        for _ in range(34):
+        for _ in range(43):
             self.filters.append(
                 OneEuroFilter(t0, 0.0, min_cutoff=min_cutoff, beta=beta)
             )
@@ -142,7 +151,9 @@ class AdvancedHandTracker(Node):
 
                 self.mp_holistic = mp.solutions.holistic
                 self.holistic = self.mp_holistic.Holistic(
-                    min_detection_confidence=0.5, min_tracking_confidence=0.5
+                    min_detection_confidence=0.5, 
+                    min_tracking_confidence=0.5,
+                    refine_face_landmarks=True
                 )
                 self.mp_draw = mp.solutions.drawing_utils
 
@@ -169,10 +180,10 @@ class AdvancedHandTracker(Node):
 
     def timer_callback(self):
         curr_time = time.time()
-        target_pos = [0.0] * 34
+        target_pos = [0.0] * 43
 
-        # Default arm positions
-        target_pos[21:34] = [0.0] * 13
+        # Default body positions
+        target_pos[21:43] = [0.0] * 22
 
         if self.mode == "camera" and self.cap is not None:
             ret, frame = self.cap.read()
@@ -270,12 +281,58 @@ class AdvancedHandTracker(Node):
 
             if results.face_landmarks:
                 flm = results.face_landmarks.landmark
-                # Mouth vertical opening: 13 (upper lip inner) vs 14 (lower lip inner)
-                mouth_open = flm[14].y - flm[13].y
+                # Mouth vertical opening
+                upper_lip = flm[13]
+                lower_lip = flm[14]
+                mouth_open = lower_lip.y - upper_lip.y
                 
-                # Map to jaw joint: 0 to -0.5
-                jaw_val = np.interp(mouth_open, [0.005, 0.05], [0.0, -0.5])
+                # Lips
+                # Map to jaw joint: 0 to -0.5 (dropping the jaw)
+                jaw_val = np.interp(mouth_open, [0.005, 0.08], [0.0, -0.4])
                 target_pos[25] = jaw_val
+                
+                # Upper lip lifting (smiling / opening)
+                upper_lip_val = np.interp(upper_lip.y - nose.y, [0.03, 0.08], [-0.2, 0.0])
+                target_pos[42] = upper_lip_val
+
+                # Blinking (Eye Aspect Ratio)
+                # Left eye (model's left, image right)
+                l_eye_top = flm[159]
+                l_eye_bottom = flm[145]
+                l_eye_open = l_eye_bottom.y - l_eye_top.y
+                l_blink = np.interp(l_eye_open, [0.015, 0.03], [-0.6, 0.0]) # 0 is open, -0.6 is closed
+                target_pos[36] = l_blink  # l_upper_lid_pitch
+                target_pos[37] = -l_blink # l_lower_lid_pitch moves opposite direction
+                
+                # Right eye
+                r_eye_top = flm[386]
+                r_eye_bottom = flm[374]
+                r_eye_open = r_eye_bottom.y - r_eye_top.y
+                r_blink = np.interp(r_eye_open, [0.015, 0.03], [-0.6, 0.0])
+                target_pos[40] = r_blink  # r_upper_lid_pitch
+                target_pos[41] = -r_blink # r_lower_lid_pitch
+                
+                # Eye Gaze Tracking (Iris)
+                if len(flm) > 468:
+                    l_iris = flm[468] # Left iris center
+                    r_iris = flm[473] # Right iris center
+                    
+                    # Left Eye yaw/pitch
+                    # Relative to eye corners 33 (outer) and 133 (inner)
+                    l_eye_inner, l_eye_outer = flm[133], flm[33]
+                    l_eye_center_x = (l_eye_inner.x + l_eye_outer.x) / 2.0
+                    l_eye_center_y = (l_eye_top.y + l_eye_bottom.y) / 2.0
+                    
+                    target_pos[34] = (l_iris.x - l_eye_center_x) * 15.0 # l_eye_yaw
+                    target_pos[35] = (l_iris.y - l_eye_center_y) * -15.0 # l_eye_pitch
+                    
+                    # Right Eye yaw/pitch
+                    r_eye_inner, r_eye_outer = flm[362], flm[263]
+                    r_eye_center_x = (r_eye_inner.x + r_eye_outer.x) / 2.0
+                    r_eye_center_y = (r_eye_top.y + r_eye_bottom.y) / 2.0
+                    
+                    target_pos[38] = (r_iris.x - r_eye_center_x) * 15.0 # r_eye_yaw
+                    target_pos[39] = (r_iris.y - r_eye_center_y) * -15.0 # r_eye_pitch
 
             if not self.headless:
                 try:
@@ -370,7 +427,7 @@ class AdvancedHandTracker(Node):
 
         # Apply 1-Euro filters to joint positions
         filtered_pos = []
-        for i in range(34):
+        for i in range(43):
             val = self.filters[i](curr_time, target_pos[i])
             filtered_pos.append(val)
 
