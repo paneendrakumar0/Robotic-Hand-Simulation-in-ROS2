@@ -9,7 +9,7 @@ def generate_launch_description():
     pkg_desc = 'dexhandv2_description'
     pkg_control = 'dexhand_control'
     
-    urdf_file = os.path.join(get_package_share_directory(pkg_desc), 'urdf/dexhandv2_right.xacro')
+    urdf_file = os.path.join(get_package_share_directory(pkg_control), 'urdf/upper_body.urdf.xacro')
     rviz_config_file = os.path.join(get_package_share_directory(pkg_control), 'config/dexhand.rviz')
 
     # Launch Configurations

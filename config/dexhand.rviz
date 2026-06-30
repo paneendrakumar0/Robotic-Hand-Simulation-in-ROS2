@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 80
+    Help Height: 138
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -10,7 +10,7 @@ Panels:
         - /RobotModel1
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 600
+    Tree Height: 238
 Visualization Manager:
   Class: ""
   Displays:
@@ -19,7 +19,9 @@ Visualization Manager:
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 160
       Enabled: true
-      Line Style: Lines
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
       Name: Grid
       Normal Cell Count: 0
       Offset:
@@ -37,9 +39,9 @@ Visualization Manager:
       Description Source: Topic
       Description Topic:
         Depth: 5
-        Durability: Volatile
-        History: Keep Last
-        Reliability: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
       Links:
@@ -47,7 +49,120 @@ Visualization Manager:
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
-        Link Tree Style: Links in Alphabetical Order
+        Index_Knuckle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Index_Knuckle_Cross_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Index_Middle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Index_Tip_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Link Tree Style: Links in Alphabetic Order
+        Middle_Knuckle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Middle_Knuckle_Cross_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Middle_Middle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Midle_Tip_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Pinky_Knuckle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Pinky_Knuckle_Cross_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Pinky_Middle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Pinky_Tip_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Ring_Knuckle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Ring_Knuckle_Cross_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Ring_Middle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Ring_Tip_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Thumb_Dist_KC_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Thumb_Knuckle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Thumb_Middle_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Thumb_Prox_KC_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Thumb_Tip_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -57,14 +172,90 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Frames Enabled: true
-      Marker Scale: 0.2
+        All Enabled: true
+        Index_Knuckle_1:
+          Value: true
+        Index_Knuckle_Cross_1:
+          Value: true
+        Index_Middle_1:
+          Value: true
+        Index_Tip_1:
+          Value: true
+        Middle_Knuckle_1:
+          Value: true
+        Middle_Knuckle_Cross_1:
+          Value: true
+        Middle_Middle_1:
+          Value: true
+        Midle_Tip_1:
+          Value: true
+        Pinky_Knuckle_1:
+          Value: true
+        Pinky_Knuckle_Cross_1:
+          Value: true
+        Pinky_Middle_1:
+          Value: true
+        Pinky_Tip_1:
+          Value: true
+        Ring_Knuckle_1:
+          Value: true
+        Ring_Knuckle_Cross_1:
+          Value: true
+        Ring_Middle_1:
+          Value: true
+        Ring_Tip_1:
+          Value: true
+        Thumb_Dist_KC_1:
+          Value: true
+        Thumb_Knuckle_1:
+          Value: true
+        Thumb_Middle_1:
+          Value: true
+        Thumb_Prox_KC_1:
+          Value: true
+        Thumb_Tip_1:
+          Value: true
+        base_link:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: false
-      Tree Delay: 3
+      Tree:
+        world:
+          base_link:
+            Index_Knuckle_Cross_1:
+              Index_Knuckle_1:
+                Index_Middle_1:
+                  Index_Tip_1:
+                    {}
+            Middle_Knuckle_Cross_1:
+              Middle_Knuckle_1:
+                Middle_Middle_1:
+                  Midle_Tip_1:
+                    {}
+            Pinky_Knuckle_Cross_1:
+              Pinky_Knuckle_1:
+                Pinky_Middle_1:
+                  Pinky_Tip_1:
+                    {}
+            Ring_Knuckle_Cross_1:
+              Ring_Knuckle_1:
+                Ring_Middle_1:
+                  Ring_Tip_1:
+                    {}
+            Thumb_Prox_KC_1:
+              Thumb_Dist_KC_1:
+                Thumb_Knuckle_1:
+                  Thumb_Middle_1:
+                    Thumb_Tip_1:
+                      {}
+      Update Interval: 0
       Value: true
+  Enabled: true
   Global Options:
     Background Color: 24; 28; 37
     Fixed Frame: world
@@ -72,21 +263,43 @@ Visualization Manager:
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact
-      Hide During Use: false
+      Hide Inactive Objects: true
     - Class: rviz_default_plugins/MoveCamera
     - Class: rviz_default_plugins/Select
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
+  Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.2
+      Distance: 1.2000000476837158
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
         X: 0
         Y: 0
-        Z: 0.2
+        Z: 0.20000000298023224
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
       Name: Current View
-      Pitch: 0.4
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.4000000059604645
       Target Frame: base_link
-      Yaw: 0.8
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 0.800000011920929
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 642
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f7000001e6fc0200000001fb000000100044006900730070006c006100790073010000006e000001e60000018200ffffff00000160000001e600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 867
+  X: 50
+  Y: 104

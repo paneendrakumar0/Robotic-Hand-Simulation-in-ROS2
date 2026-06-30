@@ -1,8 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TransformStamped
-from tf2_ros import TransformBroadcaster
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import numpy as np
 import math
@@ -71,7 +69,6 @@ class AdvancedHandTracker(Node):
 
         # Publishers
         self.publisher_ = self.create_publisher(JointState, "/joint_states", 10)
-        self.tf_broadcaster = TransformBroadcaster(self)
 
         if self.gazebo:
             self.trajectory_pub = self.create_publisher(
@@ -100,6 +97,10 @@ class AdvancedHandTracker(Node):
             "R_Ring_Yaw",
             "R_Pinky_Yaw",
             "R_Thumb_Pitch",
+            "shoulder_yaw",
+            "shoulder_pitch",
+            "elbow_pitch",
+            "wrist_roll"
         ]
 
         min_cutoff = 0.5
@@ -107,7 +108,7 @@ class AdvancedHandTracker(Node):
 
         self.filters = []
         t0 = time.time()
-        for _ in range(21):
+        for _ in range(25):
             self.filters.append(
                 OneEuroFilter(t0, 0.0, min_cutoff=min_cutoff, beta=beta)
             )
@@ -130,9 +131,9 @@ class AdvancedHandTracker(Node):
                 import cv2
                 import mediapipe as mp
 
-                self.mp_hands = mp.solutions.hands
-                self.hands = self.mp_hands.Hands(
-                    max_num_hands=1, min_detection_confidence=0.7
+                self.mp_holistic = mp.solutions.holistic
+                self.holistic = self.mp_holistic.Holistic(
+                    min_detection_confidence=0.5, min_tracking_confidence=0.5
                 )
                 self.mp_draw = mp.solutions.drawing_utils
 
@@ -159,12 +160,13 @@ class AdvancedHandTracker(Node):
 
     def timer_callback(self):
         curr_time = time.time()
-        target_pos = [0.0] * 21
+        target_pos = [0.0] * 25
 
-        # Default neutral wrist position
-        y_val = 0.0
-        z_val = 0.2
-        roll_val = 0.0
+        # Default arm positions
+        shoulder_yaw = 0.0
+        shoulder_pitch = 0.0
+        elbow_pitch = 0.0
+        wrist_roll = 0.0
 
         if self.mode == "camera" and self.cap is not None:
             ret, frame = self.cap.read()
@@ -174,45 +176,70 @@ class AdvancedHandTracker(Node):
 
             frame = cv2.flip(frame, 1)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = self.hands.process(rgb)
+            results = self.holistic.process(rgb)
 
-            if results.multi_hand_landmarks:
-                for hand_lm in results.multi_hand_landmarks:
-                    if not self.headless:
-                        self.mp_draw.draw_landmarks(
-                            frame, hand_lm, self.mp_hands.HAND_CONNECTIONS
-                        )
+            if results.right_hand_landmarks:
+                if not self.headless:
+                    self.mp_draw.draw_landmarks(
+                        frame, results.right_hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS
+                    )
 
-                    lm = hand_lm.landmark
+                lm = results.right_hand_landmarks.landmark
 
-                    # Compute raw wrist values
-                    y_val = (0.5 - lm[0].x) * 1.0  # Left/Right
-                    z_val = (0.5 - lm[0].y) * 1.0 + 0.2  # Up/Down
+                # Compute hand curls
+                def get_curl(tip, wrist):
+                    dist = math.sqrt(
+                        (lm[tip].x - lm[wrist].x) ** 2
+                        + (lm[tip].y - lm[wrist].y) ** 2
+                    )
+                    return np.interp(dist, [0.15, 0.4], [1.5, 0.0])
 
-                    dx_side = lm[5].x - lm[17].x
-                    dy_side = lm[5].y - lm[17].y
-                    roll_val = -math.atan2(dy_side, dx_side)
+                idx = get_curl(8, 0)
+                mid = get_curl(12, 0)
+                rng = get_curl(16, 0)
+                pnk = get_curl(20, 0)
+                thm = get_curl(4, 0)
 
-                    # Compute curls
-                    def get_curl(tip, wrist):
-                        dist = math.sqrt(
-                            (lm[tip].x - lm[wrist].x) ** 2
-                            + (lm[tip].y - lm[wrist].y) ** 2
-                        )
-                        return np.interp(dist, [0.15, 0.4], [1.5, 0.0])
-
-                    idx = get_curl(8, 0)
-                    mid = get_curl(12, 0)
-                    rng = get_curl(16, 0)
-                    pnk = get_curl(20, 0)
-                    thm = get_curl(4, 0)
-
-                    target_pos[0], target_pos[4], target_pos[8] = idx, idx, idx
-                    target_pos[1], target_pos[5], target_pos[9] = mid, mid, mid
-                    target_pos[2], target_pos[6], target_pos[10] = rng, rng, rng
-                    target_pos[3], target_pos[7], target_pos[11] = pnk, pnk, pnk
-                    target_pos[14], target_pos[15], target_pos[20] = thm, thm, thm
-                    target_pos[13] = thm * 0.5
+                target_pos[0], target_pos[4], target_pos[8] = idx, idx, idx
+                target_pos[1], target_pos[5], target_pos[9] = mid, mid, mid
+                target_pos[2], target_pos[6], target_pos[10] = rng, rng, rng
+                target_pos[3], target_pos[7], target_pos[11] = pnk, pnk, pnk
+                target_pos[14], target_pos[15], target_pos[20] = thm, thm, thm
+                target_pos[13] = thm * 0.5
+                
+            if results.pose_landmarks:
+                if not self.headless:
+                    self.mp_draw.draw_landmarks(
+                        frame, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS
+                    )
+                
+                plm = results.pose_landmarks.landmark
+                # Pose landmarks: 12=Right Shoulder, 14=Right Elbow, 16=Right Wrist
+                r_shoulder = plm[12]
+                r_elbow = plm[14]
+                r_wrist = plm[16]
+                
+                # Simple heuristic mapping for arm joints
+                # Shoulder yaw (side-to-side)
+                dx_shoulder = r_elbow.x - r_shoulder.x
+                shoulder_yaw = -dx_shoulder * 3.0
+                
+                # Shoulder pitch (up-down)
+                dy_shoulder = r_elbow.y - r_shoulder.y
+                shoulder_pitch = (dy_shoulder - 0.5) * 2.0
+                
+                # Elbow pitch (bending)
+                dx_elbow = r_wrist.x - r_elbow.x
+                dy_elbow = r_wrist.y - r_elbow.y
+                elbow_pitch = math.atan2(dx_elbow, dy_elbow) + 1.57
+                
+                # Wrist roll
+                wrist_roll = 0.0 # Could map from hand rotation if needed
+                
+                target_pos[21] = shoulder_yaw
+                target_pos[22] = shoulder_pitch
+                target_pos[23] = elbow_pitch
+                target_pos[24] = wrist_roll
 
             if not self.headless:
                 try:
@@ -285,10 +312,15 @@ class AdvancedHandTracker(Node):
             target_pos[3], target_pos[7], target_pos[11] = pnk, pnk, pnk
             target_pos[14], target_pos[15], target_pos[20] = thm, thm, thm
             target_pos[13] = thm * 0.5
+            
+            target_pos[21] = 0.5 * math.sin(curr_time * 0.5) # Shoulder Yaw
+            target_pos[22] = -0.5 * math.cos(curr_time * 0.5) # Shoulder Pitch
+            target_pos[23] = 0.5 + 0.5 * math.sin(curr_time) # Elbow Pitch
+            target_pos[24] = roll_val # Wrist roll
 
         # Apply 1-Euro filters to joint positions
         filtered_pos = []
-        for i in range(21):
+        for i in range(25):
             val = self.filters[i](curr_time, target_pos[i])
             filtered_pos.append(val)
 
@@ -312,31 +344,7 @@ class AdvancedHandTracker(Node):
             msg.position = filtered_pos
             self.publisher_.publish(msg)
 
-        # Broadcast wrist transformation TF
-        self.process_wrist(curr_time, y_val, z_val, roll_val)
-
-    def process_wrist(self, t, raw_y, raw_z, raw_roll):
-        # Filter wrist translation and rotation
-        f_x = self.wrist_filters[0](t, 0.0)  # Keep X locked
-        f_y = self.wrist_filters[1](t, raw_y)
-        f_z = self.wrist_filters[2](t, raw_z)
-        f_roll = self.wrist_filters[3](t, raw_roll)
-
-        t_tf = TransformStamped()
-        t_tf.header.stamp = self.get_clock().now().to_msg()
-        t_tf.header.frame_id = "world"
-        t_tf.child_frame_id = "base_link"
-
-        t_tf.transform.translation.x = f_x
-        t_tf.transform.translation.y = f_y
-        t_tf.transform.translation.z = f_z
-
-        t_tf.transform.rotation.x = 0.0
-        t_tf.transform.rotation.y = 0.0
-        t_tf.transform.rotation.z = math.sin(f_roll / 2)
-        t_tf.transform.rotation.w = math.cos(f_roll / 2)
-
-        self.tf_broadcaster.sendTransform(t_tf)
+        pass
 
 
 def main(args=None):
