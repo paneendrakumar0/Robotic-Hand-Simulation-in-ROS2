@@ -98,7 +98,10 @@ class AdvancedHandTracker(Node):
             "R_Pinky_Yaw",
             "R_Thumb_Pitch",
             "waist_yaw",
+            "neck_yaw",
             "neck_pitch",
+            "neck_roll",
+            "jaw_pitch",
             "r_shoulder_yaw",
             "r_shoulder_pitch",
             "r_elbow_pitch",
@@ -109,12 +112,12 @@ class AdvancedHandTracker(Node):
             "l_wrist_roll"
         ]
 
-        min_cutoff = 0.5
-        beta = 0.5
+        min_cutoff = 0.01  # Drastically lowered to fix jitter
+        beta = 0.05        # Drastically lowered to prevent jitter on fast movements
 
         self.filters = []
         t0 = time.time()
-        for _ in range(31):
+        for _ in range(34):
             self.filters.append(
                 OneEuroFilter(t0, 0.0, min_cutoff=min_cutoff, beta=beta)
             )
@@ -166,10 +169,10 @@ class AdvancedHandTracker(Node):
 
     def timer_callback(self):
         curr_time = time.time()
-        target_pos = [0.0] * 31
+        target_pos = [0.0] * 34
 
         # Default arm positions
-        target_pos[21:31] = [0.0] * 10
+        target_pos[21:34] = [0.0] * 13
 
         if self.mode == "camera" and self.cap is not None:
             ret, frame = self.cap.read()
@@ -217,44 +220,62 @@ class AdvancedHandTracker(Node):
                     )
                 
                 plm = results.pose_landmarks.landmark
-                # Pose landmarks: 0=Nose, 11=L_Shoulder, 12=R_Shoulder
+                # Pose landmarks: 0=Nose, 7=L_Ear, 8=R_Ear, 11=L_Shoulder, 12=R_Shoulder
                 # 13=L_Elbow, 14=R_Elbow, 15=L_Wrist, 16=R_Wrist, 23=L_Hip, 24=R_Hip
                 r_shoulder, l_shoulder = plm[12], plm[11]
                 r_elbow, l_elbow = plm[14], plm[13]
                 r_wrist, l_wrist = plm[16], plm[15]
                 nose = plm[0]
+                r_ear = plm[8]
+                l_ear = plm[7]
                 
                 # Waist/Torso
-                # Twist is estimated by shoulder depth difference
                 waist_yaw = (r_shoulder.z - l_shoulder.z) * -2.0
                 target_pos[21] = waist_yaw
 
-                # Neck Pitch
-                # Leaning forward/backward based on nose height vs shoulder height
+                # Neck (3-DOF)
+                # Yaw: Ear depth difference
+                neck_yaw = (r_ear.z - l_ear.z) * -2.5
+                target_pos[22] = neck_yaw
+
+                # Pitch: Nose height vs shoulders
                 neck_pitch = ((r_shoulder.y + l_shoulder.y)/2.0 - nose.y - 0.2) * -3.0
-                target_pos[22] = neck_pitch
+                target_pos[23] = neck_pitch
+                
+                # Roll: Ear height difference
+                neck_roll = (r_ear.y - l_ear.y) * 2.0
+                target_pos[24] = neck_roll
                 
                 # Right Arm
                 r_dx_shoulder = r_elbow.x - r_shoulder.x
                 r_dy_shoulder = r_elbow.y - r_shoulder.y
-                target_pos[23] = -r_dx_shoulder * 3.0 # r_shoulder_yaw
-                target_pos[24] = (r_dy_shoulder - 0.5) * 2.0 # r_shoulder_pitch
+                target_pos[26] = -r_dx_shoulder * 3.0 # r_shoulder_yaw
+                target_pos[27] = (r_dy_shoulder - 0.5) * 2.0 # r_shoulder_pitch
                 
                 r_dx_elbow = r_wrist.x - r_elbow.x
                 r_dy_elbow = r_wrist.y - r_elbow.y
-                target_pos[25] = math.atan2(r_dx_elbow, r_dy_elbow) + 1.57 # r_elbow_pitch
-                target_pos[26] = 0.0 # r_wrist_roll
+                target_pos[28] = math.atan2(r_dx_elbow, r_dy_elbow) + 1.57 # r_elbow_pitch
+                target_pos[29] = 0.0 # r_wrist_roll
                 
                 # Left Arm
                 l_dx_shoulder = l_elbow.x - l_shoulder.x
                 l_dy_shoulder = l_elbow.y - l_shoulder.y
-                target_pos[27] = l_dx_shoulder * 3.0 # l_shoulder_yaw
-                target_pos[28] = (l_dy_shoulder - 0.5) * 2.0 # l_shoulder_pitch
+                target_pos[30] = l_dx_shoulder * 3.0 # l_shoulder_yaw
+                target_pos[31] = (l_dy_shoulder - 0.5) * 2.0 # l_shoulder_pitch
                 
                 l_dx_elbow = l_wrist.x - l_elbow.x
                 l_dy_elbow = l_wrist.y - l_elbow.y
-                target_pos[29] = math.atan2(-l_dx_elbow, l_dy_elbow) + 1.57 # l_elbow_pitch
-                target_pos[30] = 0.0 # l_wrist_roll
+                target_pos[32] = math.atan2(-l_dx_elbow, l_dy_elbow) + 1.57 # l_elbow_pitch
+                target_pos[33] = 0.0 # l_wrist_roll
+
+            if results.face_landmarks:
+                flm = results.face_landmarks.landmark
+                # Mouth vertical opening: 13 (upper lip inner) vs 14 (lower lip inner)
+                mouth_open = flm[14].y - flm[13].y
+                
+                # Map to jaw joint: 0 to -0.5
+                jaw_val = np.interp(mouth_open, [0.005, 0.05], [0.0, -0.5])
+                target_pos[25] = jaw_val
 
             if not self.headless:
                 try:
@@ -330,23 +351,26 @@ class AdvancedHandTracker(Node):
             
             # Demo full body motion
             target_pos[21] = 0.3 * math.sin(curr_time * 0.3) # Waist
-            target_pos[22] = 0.2 * math.cos(curr_time * 0.4) # Neck
+            target_pos[22] = 0.4 * math.sin(curr_time * 0.5) # Neck Yaw
+            target_pos[23] = 0.2 * math.cos(curr_time * 0.4) # Neck Pitch
+            target_pos[24] = 0.2 * math.sin(curr_time * 0.4) # Neck Roll
+            target_pos[25] = -0.25 + 0.25 * math.sin(curr_time * 2.0) # Jaw
             
             # Right arm
-            target_pos[23] = 0.5 * math.sin(curr_time * 0.5) 
-            target_pos[24] = -0.5 * math.cos(curr_time * 0.5) 
-            target_pos[25] = 0.5 + 0.5 * math.sin(curr_time)
-            target_pos[26] = roll_val
+            target_pos[26] = 0.5 * math.sin(curr_time * 0.5) 
+            target_pos[27] = -0.5 * math.cos(curr_time * 0.5) 
+            target_pos[28] = 0.5 + 0.5 * math.sin(curr_time)
+            target_pos[29] = roll_val
             
             # Left arm
-            target_pos[27] = -0.5 * math.sin(curr_time * 0.5) 
-            target_pos[28] = -0.5 * math.cos(curr_time * 0.5 + 1.0) 
-            target_pos[29] = 0.5 + 0.5 * math.cos(curr_time)
-            target_pos[30] = -roll_val
+            target_pos[30] = -0.5 * math.sin(curr_time * 0.5) 
+            target_pos[31] = -0.5 * math.cos(curr_time * 0.5 + 1.0) 
+            target_pos[32] = 0.5 + 0.5 * math.cos(curr_time)
+            target_pos[33] = -roll_val
 
         # Apply 1-Euro filters to joint positions
         filtered_pos = []
-        for i in range(31):
+        for i in range(34):
             val = self.filters[i](curr_time, target_pos[i])
             filtered_pos.append(val)
 
