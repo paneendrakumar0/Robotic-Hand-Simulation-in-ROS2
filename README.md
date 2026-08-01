@@ -1,15 +1,19 @@
 
-
-# Robotic-Hand-Simulation-in-ROS2
-A ROS-based simulation of a robotic hand featuring full finger articulation and wrist rotation, designed for digital twin visualization in RViz.
-
----
-
 # 🤖 ROS 2 Robotic Hand Simulation (Digital Twin)
 
 ![ROS2](https://img.shields.io/badge/ROS2-Humble%20%7C%20Iron-blue)
 ![Build](https://img.shields.io/badge/build-colcon-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+A ROS-based digital twin with full finger articulation and wrist rotation in RViz2.
+
+## Project Snapshot
+
+| | |
+| --- | --- |
+| **My work** | Built the ROS 2 control package, launch modes, motion sequencing, input smoothing, and RViz configuration around the DexHand V2 model |
+| **Stack** | ROS 2, Python, URDF, RViz2, MediaPipe, Colcon |
+| **Demo** | Preview the animation below or run `ros2 launch dexhand_control advanced_control.launch.py mode:=demo` |
 
 ### 🎥 Simulation Motion Preview
 
@@ -44,10 +48,10 @@ You need both this control package and the official **DexHand V2 description** r
 
 ```bash
 # 1. Clone this simulation/control package
-git clone [https://github.com/paneendrakumar0/Robotic-Hand-Simulation-in-ROS2.git](https://github.com/paneendrakumar0/Robotic-Hand-Simulation-in-ROS2.git)
+git clone https://github.com/paneendrakumar0/Robotic-Hand-Simulation-in-ROS2.git
 
 # 2. Clone the DexHand V2 description package (Required for visual model)
-git clone [https://github.com/iotdesignshop/dexhandv2_description.git](https://github.com/iotdesignshop/dexhandv2_description.git)
+git clone https://github.com/iotdesignshop/dexhandv2_description.git
 
 ```
 
